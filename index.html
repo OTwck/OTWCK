@@ -52,20 +52,23 @@
   </div>
   <script>
     const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
-    const headers = ["Registration Time", "Name&Post", "Ward", "Bed number(s)", "Urgent", "Task(s)", "Remarks", "Status"];
     const table = document.getElementById("dataTable");
+    let headers = [];
     let rowData = [];
 
     fetchData();
     setInterval(fetchData, 15000);
 
     function fetchData() {
-      fetch(endpoint).then(res => res.json()).then(data => {
-        rowData = data.rows.map(row => row.slice(0, 8));
-        renderTable(rowData);
-        document.getElementById("lastUpdated").textContent =
-          "🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
-      });
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          headers = data.headers;
+          rowData = data.rows.map(row => row.slice(0, headers.length));
+          renderTable(rowData);
+          document.getElementById("lastUpdated").textContent =
+            "🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
+        });
     }
 
     function renderTable(rows) {
@@ -75,15 +78,17 @@
           <th><input list="filter${i}" data-index="${i}" oninput="applyFilters()" placeholder="🔍 篩選">
           <datalist id="filter${i}">${[...new Set(rowData.map(r => r[i]).filter(Boolean))].map(v => `<option>${v}</option>`).join("")}</datalist></th>
         `).join("")}</tr>`;
-      
+
       table.querySelector("tbody").innerHTML = rows.map((row, i) => `
         <tr>${row.map((val, j) => {
           if (j === 0) return `<td><input value="${val||''}" class="readonly" readonly></td>`;
-          if (j === 4) return `<td><select onchange="updateCell(${i},${j},this.value)">
-            ${["Yes","No"].map(opt => `<option ${val===opt?"selected":""}>${opt}</option>`).join("")}</select></td>`;
-          if (j === 7) {
+          if (headers[j].toLowerCase().includes("urgent")) {
+            return `<td><select onchange="updateCell(${i},${j},this.value)">
+              ${["Yes","No"].map(opt => `<option ${val===opt?"selected":""}>${opt}</option>`).join("")}</select></td>`;
+          }
+          if (headers[j].toLowerCase() === "status") {
             const isDone = (val||"").toLowerCase() === "completed";
-            return `<td><button class="status-btn ${isDone?"completed":"pending"}" data-label="${isDone?"✅ 已完成":"⏳ 處理中"}" onclick="toggleStatus(${i})">${isDone?"✅ 已完成":"⏳ 處理中"}</button></td>`;
+            return `<td><button class="status-btn ${isDone?"completed":"pending"}" data-label="${isDone?"✅ Completed":"⏳ Pending"}" onclick="toggleStatus(${i})">${isDone?"✅ Completed":"⏳ Pending"}</button></td>`;
           }
           return `<td><input value="${val||''}" onchange="updateCell(${i},${j},this.value)"></td>`;
         }).join("")}</tr>`).join("");
@@ -110,7 +115,7 @@
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "任務清單.csv";
+      link.download = "tasks.csv";
       link.click();
     }
   </script>
