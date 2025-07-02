@@ -63,8 +63,7 @@
       fetch(endpoint).then(res => res.json()).then(data => {
         rowData = data.rows.map(row => row.slice(0, 8)); // 忽略第 9 欄 Lastest Updated
         renderTable(rowData);
-        document.getElementById("lastUpdated").textContent =
-          "🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
+        document.getElementById("lastUpdated").textContent ="🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
       });
     }
 
