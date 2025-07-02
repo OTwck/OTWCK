@@ -51,17 +51,8 @@
     </table>
   </div>
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
-    const headers = [
-      "登記時間",
-      "姓名與職位",
-      "病房",
-      "床號",
-      "是否緊急",
-      "任務內容",
-      "備註",
-      "狀態"
-    ];
+    const endpoint = "https://script.google.com/macros/s/AKfycbztI91dGhYOwz6m_k7RBZsdT3mAfNBOikGM1tRsGy67rnaQaDwAeCCe1aW5OT9ssA_SSw/exec";
+    const headers = ["Registration Time", "Name&Post", "Ward", "Bed number(s)", "Urgent", "Task(s)", "Remarks", "Status"];
     const table = document.getElementById("dataTable");
     let rowData = [];
 
