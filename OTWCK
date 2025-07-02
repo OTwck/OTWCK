@@ -52,6 +52,7 @@
   </div>
   <script>
     const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
+
     const headers = ["Registration Time", "Name&Post", "Ward", "Bed number(s)", "Urgent", "Task(s)", "Remarks", "Status"];
     const table = document.getElementById("dataTable");
     let rowData = [];
