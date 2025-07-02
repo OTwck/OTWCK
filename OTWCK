@@ -39,7 +39,7 @@
 <body>
   <h2>📋 O&T 控制台</h2>
   <div>
-    <button onclick="fetchData()" data-label="🔁 更新資料">🔁 更新資料</button>
+    <button onclick="fetchData()" data-label="🔁 重新載入">🔁 重新載入</button>
     <button onclick="exportCSV()" data-label="⬇️ 匯出 CSV">⬇️ 匯出 CSV</button>
     <button onclick="window.print()" data-label="🖨️ 列印報表">🖨️ 列印報表</button>
     <span id="lastUpdated">🔄 載入中...</span>
@@ -52,8 +52,16 @@
   </div>
   <script>
     const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
-
-    const headers = ["Registration Time", "Name&Post", "Ward", "Bed number(s)", "Urgent", "Task(s)", "Remarks", "Status"];
+    const headers = [
+      "登記時間",
+      "姓名與職位",
+      "病房",
+      "床號",
+      "是否緊急",
+      "任務內容",
+      "備註",
+      "狀態"
+    ];
     const table = document.getElementById("dataTable");
     let rowData = [];
 
@@ -62,9 +70,10 @@
 
     function fetchData() {
       fetch(endpoint).then(res => res.json()).then(data => {
-        rowData = data.rows.map(row => row.slice(0, 8)); // 忽略第 9 欄 Lastest Updated
+        rowData = data.rows.map(row => row.slice(0, 8));
         renderTable(rowData);
-        document.getElementById("lastUpdated").textContent ="🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
+        document.getElementById("lastUpdated").textContent =
+          "🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
       });
     }
 
@@ -72,7 +81,7 @@
       table.querySelector("thead").innerHTML = `
         <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
         <tr>${headers.map((_, i) => `
-          <th><input list="filter${i}" data-index="${i}" oninput="applyFilters()" placeholder="🔍">
+          <th><input list="filter${i}" data-index="${i}" oninput="applyFilters()" placeholder="🔍 篩選">
           <datalist id="filter${i}">${[...new Set(rowData.map(r => r[i]).filter(Boolean))].map(v => `<option>${v}</option>`).join("")}</datalist></th>
         `).join("")}</tr>`;
       
@@ -83,7 +92,7 @@
             ${["Yes","No"].map(opt => `<option ${val===opt?"selected":""}>${opt}</option>`).join("")}</select></td>`;
           if (j === 7) {
             const isDone = (val||"").toLowerCase() === "completed";
-            return `<td><button class="status-btn ${isDone?"completed":"pending"}" data-label="${isDone?"✅ Completed":"⏳ Pending"}" onclick="toggleStatus(${i})">${isDone?"✅ Completed":"⏳ Pending"}</button></td>`;
+            return `<td><button class="status-btn ${isDone?"completed":"pending"}" data-label="${isDone?"✅ 已完成":"⏳ 處理中"}" onclick="toggleStatus(${i})">${isDone?"✅ 已完成":"⏳ 處理中"}</button></td>`;
           }
           return `<td><input value="${val||''}" onchange="updateCell(${i},${j},this.value)"></td>`;
         }).join("")}</tr>`).join("");
@@ -110,7 +119,7 @@
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "tasks.csv";
+      link.download = "任務清單.csv";
       link.click();
     }
   </script>
