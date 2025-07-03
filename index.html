@@ -72,6 +72,9 @@
       overflow-x: auto;
       margin-top: 10px;
     }
+    .status-text {
+      display: none;
+    }
     @media screen and (max-width: 768px) {
       body {
         font-size: 13px;
@@ -90,6 +93,15 @@
     }
     @media print {
       h2, #lastUpdated, button {
+        display: none !important;
+      }
+      .status-btn {
+        display: none !important;
+      }
+      .status-text {
+        display: inline !important;
+      }
+      input, select {
         display: none !important;
       }
     }
@@ -156,7 +168,10 @@
           }
           if (headers[j].toLowerCase() === "status") {
             const isDone = (val||"").toLowerCase() === "completed";
-            return `<td><button class="status-btn ${isDone?"completed":"pending"}" onclick="toggleStatus(${i})">${isDone?"✅ Completed":"⏳ Pending"}</button></td>`;
+            return `<td>
+              <span class="status-text">${isDone ? "✅ Completed" : "⏳ Pending"}</span>
+              <button class="status-btn ${isDone ? "completed" : "pending"}" onclick="toggleStatus(${i})">${isDone ? "✅ Completed" : "⏳ Pending"}</button>
+            </td>`;
           }
           return `<td><input value="${val||''}" onchange="updateCell(${i},${j},this.value)"></td>`;
         }).join("")}</tr>`).join("");
