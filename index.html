@@ -1,206 +1,113 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📋 O&T 控制台</title>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      margin: 10px;
-      background: #f4f4f4;
-      font-size: 14px;
-    }
-    h2 {
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      font-size: 13px;
-      min-width: 800px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: center;
-    }
-    th {
-      background: #eaeaea;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    input, select {
-      width: 100%;
-      padding: 4px;
-      box-sizing: border-box;
-      font-size: 13px;
-      text-align: center;
-    }
-    button {
-      padding: 6px 10px;
-      font-size: 13px;
-      margin: 4px 4px 4px 0;
-      border: none;
-      border-radius: 4px;
-      background: #4caf50;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #388e3c;
-    }
-    .status-btn.pending {
-      background: #ff9800;
-    }
-    .status-btn.completed {
-      background: #4caf50;
-    }
-    .readonly {
-      background: #f7f7f7;
-      color: #888;
-    }
-    #lastUpdated {
-      font-size: 12px;
-      color: #555;
-      margin-left: 10px;
-    }
-    .table-wrapper {
-      overflow-x: auto;
-      margin-top: 10px;
-    }
-    .status-text {
-      display: none;
-    }
-    @media screen and (max-width: 768px) {
-      body {
-        font-size: 13px;
-      }
-      table {
-        font-size: 12px;
-        min-width: 600px;
-      }
-      button {
-        font-size: 12px;
-        padding: 5px 8px;
-      }
-      input, select {
-        font-size: 12px;
-      }
-    }
-    @media print {
-      h2, #lastUpdated, button {
-        display: none !important;
-      }
-      .status-btn {
-        display: none !important;
-      }
-      .status-text {
-        display: inline !important;
-      }
-      input, select {
-        display: none !important;
-      }
-    }
-  </style>
-</head>
-<body>
-  <h2>📋 O&T 控制台</h2>
-  <div>
-    <button onclick="fetchData()">🔁 重新載入</button>
-    <button onclick="exportCSV()">⬇️ 匯出 CSV</button>
-    <button onclick="window.print()">🖨️ 列印報表</button>
-    <span id="lastUpdated">🔄 載入中...</span>
-  </div>
-  <div class="table-wrapper">
-    <table id="dataTable">
-      <thead></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
-    const table = document.getElementById("dataTable");
-    let headers = [];
-    let rowData = [];
+const SHEET_ID = "1h77IebbsEQmesShYKd49OTrqV6oTcXe60t-bEy5likM";
+const SHEET_NAME = "OT Homework";
 
-    fetchData();
-    setInterval(fetchData, 15000);
+function doGet(e) {
+  const action = e?.parameter?.action;
+  if (action === "update") return doUpdate(e);
+  if (action === "toggle") return doToggle(e);
+  return ContentService.createTextOutput(JSON.stringify(getData()))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
-    function fetchData() {
-      fetch(endpoint)
-        .then(res => res.json())
-        .then(data => {
-          if (!data || !Array.isArray(data.headers) || !Array.isArray(data.rows)) {
-            console.error("⚠️ 無法取得資料，請檢查 API 回傳格式", data);
-            alert("⚠️ 無法載入資料，請確認 Apps Script 是否正確回傳 headers 與 rows");
-            return;
-          }
-          headers = data.headers;
-          rowData = data.rows.map(row => row.slice(0, headers.length));
-          renderTable(rowData);
-          document.getElementById("lastUpdated").textContent =
-            "🔄 最後更新：" + new Date().toLocaleString("zh-HK", { hour12: false });
-        })
-        .catch(err => {
-          console.error("❌ 載入資料時發生錯誤：", err);
-          alert("❌ 無法連接資料來源，請稍後再試");
-        });
+function getData() {
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      Logger.log("❌ 找不到工作表：" + SHEET_NAME);
+      return { error: "找不到工作表：" + SHEET_NAME, headers: [], rows: [] };
     }
 
-    function renderTable(rows) {
-      table.querySelector("thead").innerHTML = `
-        <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
-        <tr>${headers.map((_, i) => `
-          <th><input list="filter${i}" data-index="${i}" oninput="applyFilters()" placeholder="🔍 篩選">
-          <datalist id="filter${i}">${[...new Set(rowData.map(r => r[i]).filter(Boolean))].map(v => `<option>${v}</option>`).join("")}</datalist></th>
-        `).join("")}</tr>`;
-
-      table.querySelector("tbody").innerHTML = rows.map((row, i) => `
-        <tr>${row.map((val, j) => {
-          if (j === 0) return `<td><input value="${val||''}" class="readonly" readonly></td>`;
-          if (headers[j].toLowerCase().includes("urgent")) {
-            return `<td><select onchange="updateCell(${i},${j},this.value)">
-              ${["Yes","No"].map(opt => `<option ${val===opt?"selected":""}>${opt}</option>`).join("")}</select></td>`;
-          }
-          if (headers[j].toLowerCase() === "status") {
-            const isDone = (val||"").toLowerCase() === "completed";
-            return `<td>
-              <span class="status-text">${isDone ? "✅ Completed" : "⏳ Pending"}</span>
-              <button class="status-btn ${isDone ? "completed" : "pending"}" onclick="toggleStatus(${i})">${isDone ? "✅ Completed" : "⏳ Pending"}</button>
-            </td>`;
-          }
-          return `<td><input value="${val||''}" onchange="updateCell(${i},${j},this.value)"></td>`;
-        }).join("")}</tr>`).join("");
+    const data = sheet.getDataRange().getValues();
+    Logger.log("📦 數據範圍：" + sheet.getDataRange().getA1Notation());
+    Logger.log("📦 資料筆數：" + data.length + " 行");
+    if (data.length > 1) {
+      Logger.log("📦 第二行：" + JSON.stringify(data[1]));
+      Logger.log("📦 第二行類型：" + data[1].map(cell => typeof cell));
     }
 
-    function applyFilters() {
-      const inputs = table.querySelectorAll("thead input");
-      const filters = [...inputs].map(i => i.value.toLowerCase());
-      const filtered = rowData.filter(r => filters.every((f, i) => !f || (r[i]||"").toString().toLowerCase().includes(f)));
-      renderTable(filtered);
+    if (!data || data.length === 0 || !Array.isArray(data[0])) {
+      Logger.log("⚠️ 資料為空或格式錯誤");
+      return { error: "試算表無數據或格式錯誤", headers: [], rows: [] };
     }
 
-    function updateCell(row, col, val) {
-      fetch(`${endpoint}?action=update&row=${row}&col=${col}&val=${encodeURIComponent(val)}`);
+    const headers = data[0].map(h => h?.toString().trim() || "");
+    const rows = data.slice(1).filter(row => row.some(cell => cell != null && cell.toString().trim() !== ""));
+    Logger.log("📦 標頭：" + JSON.stringify(headers));
+    Logger.log("📦 過濾後行數：" + rows.length);
+    Logger.log("📦 過濾後行：" + JSON.stringify(rows));
+
+    // 格式化日期為香港時間 (HKT, UTC+8) 的 dd/MM/yyyy HH:mm:ss
+    const formattedRows = rows.map(row => 
+      row.map(cell => {
+        if (cell instanceof Date) {
+          return Utilities.formatDate(cell, "GMT+8", "dd/MM/yyyy HH:mm:ss");
+        }
+        return cell;
+      })
+    );
+
+    return {
+      headers: headers,
+      rows: formattedRows
+    };
+  } catch (error) {
+    Logger.log("❌ getData() 錯誤：" + error.message);
+    return { error: error.message, headers: [], rows: [] };
+  }
+}
+
+function doUpdate(e) {
+  try {
+    const row = parseInt(e.parameter.row, 10) + 2;
+    const col = parseInt(e.parameter.col, 10) + 1;
+    const val = e.parameter.val;
+
+    if (isNaN(row) || isNaN(col)) {
+      Logger.log("❌ doUpdate() 參數錯誤：row 或 col 無效");
+      return ContentService.createTextOutput(JSON.stringify({ error: "無效的 row 或 col 參數" }));
     }
 
-    function toggleStatus(row) {
-      fetch(`${endpoint}?action=toggle&row=${row}`);
-      setTimeout(fetchData, 500);
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      Logger.log("❌ 找不到工作表：" + SHEET_NAME);
+      return ContentService.createTextOutput(JSON.stringify({ error: "找不到工作表" }));
     }
 
-    function exportCSV() {
-      let csv = headers.join(",") + "\n" + rowData.map(row => row.map(v => `"${v||""}"`).join(",")).join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "tasks.csv";
-      link.click();
+    sheet.getRange(row, col).setValue(val);
+    sheet.getRange(row, 9).setValue(new Date());
+    Logger.log(`📝 更新：行 ${row}, 列 ${col}, 值 ${val}`);
+
+    return ContentService.createTextOutput("OK");
+  } catch (error) {
+    Logger.log("❌ doUpdate() 錯誤：" + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ error: error.message }));
+  }
+}
+
+function doToggle(e) {
+  try {
+    const row = parseInt(e.parameter.row, 10) + 2;
+    if (isNaN(row)) {
+      Logger.log("❌ doToggle() 參數錯誤：row 無效");
+      return ContentService.createTextOutput(JSON.stringify({ error: "無效的 row 參數" }));
     }
-  </script>
-</body>
-</html>
+
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      Logger.log("❌ 找不到工作表：" + SHEET_NAME);
+      return ContentService.createTextOutput(JSON.stringify({ error: "找不到工作表" }));
+    }
+
+    const statusCell = sheet.getRange(row, 8);
+    const current = (statusCell.getValue() || "").toString().toLowerCase();
+    const next = current === "completed" ? "Pending" : "Completed";
+    statusCell.setValue(next);
+    sheet.getRange(row, 9).setValue(new Date());
+    Logger.log(`📝 切換狀態：行 ${row}, 新狀態 ${next}`);
+
+    return ContentService.createTextOutput("OK");
+  } catch (error) {
+    Logger.log("❌ doToggle() 錯誤：" + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ error: error.message }));
+  }
+}
