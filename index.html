@@ -3,19 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>O&T 控制台</title>
+  <title>📋 O&T 控制台</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 20px; background: #f4f4f4; }
-    table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    th { background: #eaeaea; }
-    input, select { width: 100%; padding: 4px; box-sizing: border-box; text-align: center; }
-    button { padding: 5px 10px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px; font-size: 13px; }
-    button:hover { background: #388e3c; }
-    .status-btn.pending { background: #ff9800; }
-    .status-btn.completed { background: #4caf50; }
-    .readonly { background: #f7f7f7; color: #888; }
-    #lastUpdated { font-size: 13px; color: #555; margin-left: 10px; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 10px;
+      background: #f4f4f4;
+      font-size: 14px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 13px;
+      min-width: 800px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background: #eaeaea;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    input, select {
+      width: 100%;
+      padding: 4px;
+      box-sizing: border-box;
+      font-size: 13px;
+      text-align: center;
+    }
+    button {
+      padding: 6px 10px;
+      font-size: 13px;
+      margin: 4px 4px 4px 0;
+      border: none;
+      border-radius: 4px;
+      background: #4caf50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #388e3c;
+    }
+    .status-btn.pending {
+      background: #ff9800;
+    }
+    .status-btn.completed {
+      background: #4caf50;
+    }
+    .readonly {
+      background: #f7f7f7;
+      color: #888;
+    }
+    #lastUpdated {
+      font-size: 12px;
+      color: #555;
+      margin-left: 10px;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    @media screen and (max-width: 768px) {
+      body {
+        font-size: 13px;
+      }
+      table {
+        font-size: 12px;
+        min-width: 600px;
+      }
+      button {
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      input, select {
+        font-size: 12px;
+      }
+    }
+    @media print {
+      h2, #lastUpdated, button {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -26,7 +103,7 @@
     <button onclick="window.print()">🖨️ 列印報表</button>
     <span id="lastUpdated">🔄 載入中...</span>
   </div>
-  <div style="overflow-x:auto;">
+  <div class="table-wrapper">
     <table id="dataTable">
       <thead></thead>
       <tbody></tbody>
@@ -112,4 +189,3 @@
   </script>
 </body>
 </html>
-``
