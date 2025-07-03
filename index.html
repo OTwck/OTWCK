@@ -72,7 +72,7 @@
       overflow-x: auto;
       margin-top: 10px;
     }
-    .status-text {
+    .status-text, .print-text {
       display: none;
     }
     @media screen and (max-width: 768px) {
@@ -99,6 +99,9 @@
         display: none !important;
       }
       .status-text {
+        display: inline !important;
+      }
+      .print-text {
         display: inline !important;
       }
       input, select {
@@ -161,19 +164,27 @@
 
       table.querySelector("tbody").innerHTML = rows.map((row, i) => `
         <tr>${row.map((val, j) => {
-          if (j === 0) return `<td><input value="${val||''}" class="readonly" readonly></td>`;
+          const safeVal = val || "";
+          if (j === 0) return `<td><span class="print-text">${safeVal}</span><input value="${safeVal}" class="readonly" readonly></td>`;
           if (headers[j].toLowerCase().includes("urgent")) {
-            return `<td><select onchange="updateCell(${i},${j},this.value)">
-              ${["Yes","No"].map(opt => `<option ${val===opt?"selected":""}>${opt}</option>`).join("")}</select></td>`;
+            return `<td>
+              <span class="print-text">${safeVal}</span>
+              <select onchange="updateCell(${i},${j},this.value)">
+                ${["Yes","No"].map(opt => `<option ${safeVal===opt?"selected":""}>${opt}</option>`).join("")}
+              </select>
+            </td>`;
           }
           if (headers[j].toLowerCase() === "status") {
-            const isDone = (val||"").toLowerCase() === "completed";
+            const isDone = safeVal.toLowerCase() === "completed";
             return `<td>
               <span class="status-text">${isDone ? "✅ Completed" : "⏳ Pending"}</span>
               <button class="status-btn ${isDone ? "completed" : "pending"}" onclick="toggleStatus(${i})">${isDone ? "✅ Completed" : "⏳ Pending"}</button>
             </td>`;
           }
-          return `<td><input value="${val||''}" onchange="updateCell(${i},${j},this.value)"></td>`;
+          return `<td>
+            <span class="print-text">${safeVal}</span>
+            <input value="${safeVal}" onchange="updateCell(${i},${j},this.value)">
+          </td>`;
         }).join("")}</tr>`).join("");
     }
 
