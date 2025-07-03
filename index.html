@@ -122,7 +122,7 @@
     </table>
   </div>
   <script>
-    const endpoint = "https://script.google.com/macros/s/AKfycbxbSjo8nWkCeR-dtyz2GDgswesTOnEzUUUHjiHSevXXqoGh0OVXB-HGBqeG4eBFe2Gz/exec";
+    const endpoint = "https://script.google.com/macros/s/AKfycbx8pj6NtTdyanMTyeqmliEbMtg7ZBJ4U7Z2FWvyjY_sk_uAgoQJ3XDpfKDxqR1EA6oc/exec";
     const table = document.getElementById("dataTable");
     let headers = [];
     let rowData = [];
@@ -168,7 +168,6 @@
           }
           if (headers[j].toLowerCase() === "status") {
             const isDone = (val||"").toLowerCase() === "completed";
-            return `<td><button class="status-btn ${isDone?"completed":"pending"}" onclick="toggleStatus(${i})">${isDone?"✅ Completed":"⏳ Pending"}</button></td>`;
             return `<td>
               <span class="status-text">${isDone ? "✅ Completed" : "⏳ Pending"}</span>
               <button class="status-btn ${isDone ? "completed" : "pending"}" onclick="toggleStatus(${i})">${isDone ? "✅ Completed" : "⏳ Pending"}</button>
